@@ -1,6 +1,6 @@
 # Clouds8
 
-**OCI Attack Surface Management Dashboard**
+**Cloud Security Mapping Tool**
 
 Clouds8 is a modular security tool designed to help security teams understand and explore attack surface maps for Oracle Cloud Infrastructure (OCI).
 
