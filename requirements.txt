@@ -1,0 +1,31 @@
+# Clouds8 - Cloud Attack Surface Management Platform
+
+# OCI SDK for cloud infrastructure data collection
+oci>=2.112.0
+
+# GCP SDK for cloud infrastructure data collection
+google-auth>=2.29.0
+google-api-python-client>=2.126.0
+
+# YAML for playbook definitions
+pyyaml>=6.0.1
+
+# PDF report generation
+fpdf2>=2.7.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Async support for collectors
+aiohttp>=3.9.0
+
+# FastAPI backend
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+httpx>=0.27.0
+python-multipart>=0.0.9
+
+# Development dependencies
+pytest>=7.4.0
+black>=23.10.0
+flake8>=6.1.0

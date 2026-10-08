@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/*
+ * Design tokens, ported 1:1 from the Clouds8 UI design-kit mockup page.
+ * Dark theme only (see migration plan's "Explicitly deferred" section) -
+ * every screenshot of the real app already runs dark.
+ */
+:root {
+  --lm-bg: #101418;
+  --lm-panel: #171c22;
+  --lm-panel-2: #1e252d;
+  --lm-line: #2a333d;
+  --lm-text: #e8edf2;
+  --lm-dim: #9aa7b4;
+  --lm-accent: #e0913a;
+
+  /* Severity scale - always paired with a text label, never color alone. */
+  --lm-critical: #ff5c72;
+  --lm-high: #e0913a;
+  --lm-medium: #e0c23a;
+  --lm-low: #3ab6e0;
+  --lm-clean: #3ae094;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-ui: "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+@theme inline {
+  --color-lm-bg: var(--lm-bg);
+  --color-lm-panel: var(--lm-panel);
+  --color-lm-panel-2: var(--lm-panel-2);
+  --color-lm-line: var(--lm-line);
+  --color-lm-text: var(--lm-text);
+  --color-lm-dim: var(--lm-dim);
+  --color-lm-accent: var(--lm-accent);
+  --color-lm-critical: var(--lm-critical);
+  --color-lm-high: var(--lm-high);
+  --color-lm-medium: var(--lm-medium);
+  --color-lm-low: var(--lm-low);
+  --color-lm-clean: var(--lm-clean);
+  --font-display: var(--font-display);
+  --font-ui: var(--font-ui);
+  --font-mono: var(--font-mono);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--lm-bg);
+  color: var(--lm-text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Loading Kit: shimmer at 1.5s, per the design kit's loading-skeleton spec. */
+@keyframes lm-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.lm-skeleton {
+  background: linear-gradient(90deg, var(--lm-panel-2) 25%, var(--lm-line) 37%, var(--lm-panel-2) 63%);
+  background-size: 800px 100%;
+  animation: lm-shimmer 1.5s linear infinite;
+  border-radius: 4px;
+}
+
+/* Thin, dark-themed scrollbars everywhere. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--lm-line) transparent;
+}

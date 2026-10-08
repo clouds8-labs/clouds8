@@ -1,0 +1,180 @@
+# CIS OCI Foundations Benchmark v2.0 - Clouds8 Security Playbook
+# Reference: https://www.cisecurity.org/benchmark/oracle_cloud
+
+name: cis_oci_v2
+version: "2.0"
+description: "CIS Oracle Cloud Infrastructure Foundations Benchmark"
+metadata:
+  severity_levels: [critical, high, medium, low, informational]
+  categories:
+    - identity
+    - networking
+    - storage
+    - compute
+    - logging
+
+checks:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Section 1: Identity & Access Management
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - id: CIS-1.1
+    name: "Ensure MFA is enabled for all users with console password"
+    category: identity
+    severity: critical
+    oci_api: "IdentityClient.list_users"
+    field: "is_mfa_activated"
+    implementation: _check_iam
+
+  - id: CIS-1.2
+    name: "Ensure API keys are rotated within 90 days"
+    category: identity
+    severity: high
+    oci_api: "IdentityClient.list_api_keys"
+    field: "time_created"
+    implementation: _check_iam
+
+  - id: CIS-1.3
+    name: "Ensure no API keys exist for tenancy administrator users"
+    category: identity
+    severity: critical
+    oci_api: "IdentityClient.list_api_keys + list_user_group_memberships"
+    implementation: _check_iam
+
+  - id: CIS-1.4
+    name: "Ensure auth tokens are rotated within 90 days"
+    category: identity
+    severity: high
+    oci_api: "IdentityClient.list_auth_tokens"
+    implementation: _check_iam
+
+  - id: CIS-1.5
+    name: "Ensure IAM policies do not grant overly broad permissions"
+    category: identity
+    severity: high
+    oci_api: "IdentityClient.list_policies"
+    field: "statements"
+    implementation: _check_iam
+
+  - id: CIS-1.6
+    name: "Ensure users inactive for 90+ days are disabled"
+    category: identity
+    severity: medium
+    oci_api: "IdentityClient.list_users"
+    field: "last_successful_login_time"
+    implementation: _check_iam
+
+  - id: CIS-1.7
+    name: "Ensure IAM password policy is strong"
+    category: identity
+    severity: high
+    oci_api: "IdentityClient.get_authentication_policy"
+    field: "password_policy"
+    implementation: _check_iam
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Section 2: Networking
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - id: CIS-2.1
+    name: "Ensure no security lists allow ingress from 0.0.0.0/0 to port 22 (SSH)"
+    category: networking
+    severity: critical
+    oci_api: "VirtualNetworkClient.list_security_lists"
+    field: "ingress_security_rules"
+    implementation: _check_networking
+
+  - id: CIS-2.2
+    name: "Ensure no security lists allow ingress from 0.0.0.0/0 to port 3389 (RDP)"
+    category: networking
+    severity: critical
+    oci_api: "VirtualNetworkClient.list_security_lists"
+    field: "ingress_security_rules"
+    implementation: _check_networking
+
+  - id: CIS-2.3
+    name: "Ensure no security lists allow unrestricted ingress (all ports from 0.0.0.0/0)"
+    category: networking
+    severity: critical
+    oci_api: "VirtualNetworkClient.list_security_lists"
+    field: "ingress_security_rules"
+    implementation: _check_networking
+
+  - id: CIS-2.4
+    name: "Ensure subnets prohibit public IP assignment where not required"
+    category: networking
+    severity: medium
+    oci_api: "VirtualNetworkClient.list_subnets"
+    field: "prohibit_public_ip_on_vnic"
+    implementation: _check_networking
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Section 3: Storage
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - id: CIS-3.1
+    name: "Ensure Object Storage buckets are not publicly accessible"
+    category: storage
+    severity: critical
+    oci_api: "ObjectStorageClient.get_bucket"
+    field: "public_access_type"
+    implementation: _check_storage
+
+  - id: CIS-3.2
+    name: "Ensure Object Storage buckets have versioning enabled"
+    category: storage
+    severity: medium
+    oci_api: "ObjectStorageClient.get_bucket"
+    field: "versioning"
+    implementation: _check_storage
+
+  - id: CIS-3.3
+    name: "Ensure Object Storage buckets are encrypted with customer-managed keys"
+    category: storage
+    severity: high
+    oci_api: "ObjectStorageClient.get_bucket"
+    field: "kms_key_id"
+    implementation: _check_storage
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Section 4: Compute
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - id: CIS-4.1
+    name: "Ensure Compute Instance Legacy Metadata service endpoint is disabled"
+    category: compute
+    severity: high
+    oci_api: "ComputeClient.list_instances"
+    field: "instance_options.are_legacy_imds_endpoints_disabled"
+    implementation: _check_compute
+
+  - id: CIS-4.2
+    name: "Ensure monitoring agent is enabled on all instances"
+    category: compute
+    severity: medium
+    oci_api: "ComputeClient.list_instances"
+    field: "agent_config.is_monitoring_disabled"
+    implementation: _check_compute
+
+  - id: CIS-4.3
+    name: "Ensure compute instances do not have unnecessary public IPs"
+    category: compute
+    severity: medium
+    oci_api: "ComputeClient.list_vnic_attachments + VirtualNetworkClient.get_vnic"
+    field: "public_ip"
+    implementation: _check_compute
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Section 5: Logging & Monitoring
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - id: CIS-5.1
+    name: "Ensure audit log retention is set to 365 days"
+    category: logging
+    severity: high
+    oci_api: "AuditClient.get_configuration"
+    field: "retention_period_days"
+    implementation: _check_logging
+
+  - id: CIS-5.2
+    name: "Ensure Cloud Guard is enabled in the root compartment"
+    category: logging
+    severity: high
+    oci_api: "CloudGuardClient.get_configuration"
+    field: "status"
+    implementation: _check_logging

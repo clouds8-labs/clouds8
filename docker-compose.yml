@@ -1,0 +1,71 @@
+services:
+  db-service:
+    build:
+      context: .
+      dockerfile: services/db-service/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      CLOUDS8_DB_PATH: /data/clouds8.db
+      AUTH_SECRET: ${AUTH_SECRET}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    volumes:
+      - clouds8-db:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend-api:
+    build:
+      context: .
+      dockerfile: services/backend-api/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      DB_SERVICE_URL: http://db-service:8001
+      # OCI's config file stores key_file as an absolute host path (e.g.
+      # /Users/you/.oci/key.pem) - HOME is set to match the host so the
+      # mounted config's own internal paths resolve correctly in-container,
+      # rather than remapping to /root and breaking those references.
+      HOME: ${HOME}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      AUTH_SECRET: ${AUTH_SECRET}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    depends_on:
+      db-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Real OCI credentials, mounted read-only at the identical host path -
+    # live (non-mock) collection. Remove this to fall back to mock-data mode.
+    volumes:
+      - ${HOME}/.oci:${HOME}/.oci:ro
+
+  # React frontend. Talks to db-service and backend-api directly from the
+  # browser (see frontend/Dockerfile's comment on why its build args are
+  # host-published ports, not internal service hostnames), so its only
+  # dependency here is "built after" the backend images, not a runtime
+  # health check on them.
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_DB_SERVICE_URL: http://localhost:8001
+        VITE_BACKEND_API_URL: http://localhost:8002
+    ports:
+      - "3000:80"
+    depends_on:
+      db-service:
+        condition: service_healthy
+      backend-api:
+        condition: service_healthy
+
+volumes:
+  clouds8-db:
